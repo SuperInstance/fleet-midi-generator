@@ -12,7 +12,7 @@
 
 ---
 
-Takes a sequence of ternary agent states and generates a MIDI completion. Each {+1, 0, -1} maps to a pitch contour (up/repeat/down). Produces Standard MIDI Format 1 files ready for fleet transport. No training required — zeroshot generation from any state pattern.
+Takes a sequence of ternary agent states and generates a MIDI completion. Each {+1, 0, -1} maps to a pitch contour. Produces Standard MIDI Format 1 files ready for fleet transport. No training — pure zeroshot generation.
 
 ---
 
@@ -32,22 +32,55 @@ git clone https://github.com/SuperInstance/fleet-midi-generator.git
 ## 🚀 Quick Start
 
 ```bash
-# see Getting Started below
+# Generate MIDI completion from agent states:
+node lib/generator.js "[[1,0,-1,1],[0,1,0,-1],[-1,-1,1,1],[1,0,0,1]]"
+
+# Output:
+# {"file":"completion-12345.mid","notes":16,"bars":4}
 ```
 
 ## 🏗️ Architecture
 
 ```
-Coming soon
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│   Agent State Sequences                              │
+│   [[1,0,-1,1], [0,1,0,-1], [-1,-1,1,1], [1,0,0,1]]  │
+│         │                                           │
+│         ▼                                           │
+│   ┌─────────────────┐                               │
+│   │ Pitch Mapper     │  +1 → base + 4 (ascend)      │
+│   │                  │   0 → base (repeat)          │
+│   │                  │  -1 → base - 3 (descend)     │
+│   └────────┬─────────┘                               │
+│            ▼                                        │
+│   ┌─────────────────┐                               │
+│   │ music21 Score   │  16 notes · 4 bars            │
+│   │ MIDI Format 1   │  Output: completion-{hash}.mid│
+│   └─────────────────┘                               │
+│                                                     │
+│   Every ternary state = one quarter note in 4/4      │
+│   Auto-detects python3.10 for music21                │
+└─────────────────────────────────────────────────────┘
 ```
 
 ## 📡 API
 
-See source code for endpoints.
+### CLI Usage
+```bash
+node lib/generator.js "[[1,0,-1,1],[0,1,0,-1]]"
+```
+
+### Programmatic
+```javascript
+const { generateCompletion } = require("./lib/generator");
+const result = generateCompletion([[1,0,-1],[0,1,0]], 4);
+// → { file: "...mid", notes: 16, bars: 4 }
+```
 
 ## 🧪 Beta Tested
 
-Part of the [SuperInstance MIDI Fleet](https://github.com/SuperInstance/construct-coordination/blob/main/FLEET_MIDI.md). Zeroshot-verified on every push via CI.
+Part of the [SuperInstance MIDI Fleet](https://github.com/SuperInstance/construct-coordination/blob/main/FLEET_MIDI.md). Every push verified via CI — zeroshot tests ensure zero-config operation out of the box.
 
 ## 🤝 Related
 
